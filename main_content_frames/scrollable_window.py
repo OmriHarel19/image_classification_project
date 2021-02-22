@@ -22,6 +22,13 @@ class ScrollableWindow(tk.Canvas):
         # whenever the scrollable frame size changes (<Configure> event) the method is called
         self.scrollable_frame.bind("<Configure>", configure_scroll_region)
 
+        # enable scrolling with mouse wheel
+        def on_mousewheel(event):
+            self.yview_scroll(-int(event.delta/120), "units")
+
+        # we use bind_all so that scrolling will work without need to select the canvas
+        self.bind_all("<MouseWheel>", on_mousewheel)
+
         # create the scroll bar:
         scrollbar = ttk.Scrollbar(container, orient="vertical", command=self.yview)  # bind scrollbar to canvas yview
         scrollbar.grid(row=0, column=1, sticky="NS")  # expand vertically

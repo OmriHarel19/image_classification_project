@@ -9,7 +9,7 @@ class ClassFrame(ttk.Frame):
     def __init__(self, container: ttk.Frame, class_num: int, **kwargs):
         super().__init__(container, **kwargs)
 
-        self["style"] = "Background2.TFrame"
+        self["style"] = "Background1.TFrame"
 
         # col config:
         self.columnconfigure((0, 1), weight=1)
