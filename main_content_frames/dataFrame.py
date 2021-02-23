@@ -1,9 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from .sectionFrame import SectionFrame
-from .data_section_frames import ClassFrame
-from .scrollable_window import ScrollableWindow
 from main_content_frames.data_section_frames import ClassesSectionFrame
+from main_content_frames.data_section_frames.webcam_section import WebcamSectionFrame
 
 
 class DataFrame(SectionFrame):
@@ -19,18 +18,8 @@ class DataFrame(SectionFrame):
         data_main_frame.rowconfigure(0, weight=1)
         data_main_frame.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW")  # expand in both axis
 
-        '''
-        # classes container:
-        classes_container = ttk.Frame(data_main_frame, style="Background3.TFrame")
-        # classes_container.columnconfigure(0, weight=1)  # take all horizontal space
-        classes_container.rowconfigure(0, weight=1)  # 1st row, which holds the content, takes all available space
-        classes_container.grid(row=0, column=0, padx=5, pady=5, sticky="NSEW")
-        '''
-
         # webcam container:
-        webcam_container = ttk.Frame(data_main_frame, style="Background3.TFrame")
-        webcam_container.columnconfigure(0, weight=1)  # take all horizontal space
-        webcam_container.rowconfigure(0, weight=1)  # 1st row, which holds the content, takes all available space
+        webcam_container = WebcamSectionFrame(data_main_frame, style="Background3.TFrame")
         webcam_container.grid(row=0, column=1, padx=5, pady=5, sticky="NSEW")
 
         # classes section container:
@@ -40,7 +29,3 @@ class DataFrame(SectionFrame):
         # scrollable classes window
         # classes_window = classes_section_frame.classes_window
 
-        '''
-        for i in range(15):
-            ClassFrame(classes_window.scrollable_frame, class_num=i).grid(padx=5, pady=20, sticky="EW")
-        '''

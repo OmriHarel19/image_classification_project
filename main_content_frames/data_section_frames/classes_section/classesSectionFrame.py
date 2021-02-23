@@ -1,6 +1,5 @@
-import tkinter as tk
 from tkinter import ttk
-from .classesWindow import ClassesWindow
+from main_content_frames.data_section_frames.classes_section.classesWindow import ClassesWindow
 
 
 # a frame that contains the classes section inside the dataFrame

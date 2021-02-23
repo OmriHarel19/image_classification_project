@@ -24,10 +24,10 @@ class ScrollableWindow(tk.Canvas):
 
         # enable scrolling with mouse wheel
         def on_mousewheel(event):
-            self.yview_scroll(-int(event.delta/120), "units")
+            self.yview_scroll(-int(event.delta / 120), "units")
 
-        # we use bind_all so that scrolling will work without need to select the canvas
-        self.bind_all("<MouseWheel>", on_mousewheel)
+        # bind <MouseWheel> event to on_mousewheel
+        self.bind("<MouseWheel>", on_mousewheel)
 
         # create the scroll bar:
         scrollbar = ttk.Scrollbar(container, orient="vertical", command=self.yview)  # bind scrollbar to canvas yview

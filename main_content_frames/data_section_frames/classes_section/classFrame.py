@@ -29,7 +29,7 @@ class ClassFrame(ttk.Frame):
         )
         self.class_name_textbox.insert("1.0", self.class_name)
 
-        self.class_name_textbox.grid(row=0, column=0, padx=5, pady=5, sticky="W")
+        self.class_name_textbox.grid(row=0, column=0, padx=2, pady=2, sticky="W")
 
         # options combobox:
         self.options_combobox = ttk.Combobox(
@@ -38,20 +38,37 @@ class ClassFrame(ttk.Frame):
             state="readonly"
         )
 
-        self.options_combobox.grid(row=0, column=1, padx=5, pady=5, sticky="E")
+        self.options_combobox.grid(row=0, column=1, padx=2, pady=2, sticky="E")
 
-        # 2nd row: collect data buttons:
+        # 2nd row: separator
+        separator = ttk.Separator(self, orient="horizontal")
+        separator.grid(row=1, column=0, columnspan=2, padx=2, pady=2, sticky="EW")
+
+        # 3rd row: "x image samples" label
+
+        self.sample_counter = 0
+        self.label_text = tk.StringVar(value=f"{self.sample_counter} image samples")
+
+        self.sample_counter_label = ttk.Label(
+            self,
+            textvariable=self.label_text,
+            foreground="blue",
+            font=("TkDefaultFont", 10)
+        )
+        self.sample_counter_label.grid(row=2, column=0, columnspan=2, padx=2, pady=2)
+
+        # 4th row: collect data buttons:
 
         # webcam button:
         self.webcam_button = ttk.Button(
             self,
             text="webcam"
         )
-        self.webcam_button.grid(row=1, column=0, padx=2, pady=2, sticky="EW")
+        self.webcam_button.grid(row=3, column=0, padx=2, pady=2, sticky="EW")
 
         # upload button:
         self.upload_button = ttk.Button(
             self,
             text="upload"
         )
-        self.upload_button.grid(row=1, column=1, padx=2, pady=2, sticky="EW")
+        self.upload_button.grid(row=3, column=1, padx=2, pady=2, sticky="EW")
