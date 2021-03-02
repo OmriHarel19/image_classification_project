@@ -7,7 +7,7 @@ from PIL import Image, ImageTk
 class MyVideoCapture:
     def __init__(self, video_source=0):
         # Open the video source
-        self.vid = cv2.VideoCapture(video_source)
+        self.vid = cv2.VideoCapture(video_source, cv2.CAP_DSHOW)
         # checks if video source opened:
         if not self.vid.isOpened():
             raise ValueError("Unable to open video source", video_source)
@@ -36,3 +36,4 @@ class MyVideoCapture:
     def __del__(self):
         if self.vid.isOpened():
             self.vid.release()
+            cv2.destroyAllWindows()

@@ -1,11 +1,12 @@
 from tkinter import ttk
 from main_content_frames.data_section_frames.classes_section.classesWindow import ClassesWindow
+from main_content_frames.data_section_frames.webcam_section.dataWebcamSectionFrame import DataWebcamSectionFrame
 
 
 # a frame that contains the classes section inside the dataFrame
 # contains the scrollable class window and the "add class" button.
 class ClassesSectionFrame(ttk.Frame):
-    def __init__(self, container: ttk.Frame, **kwargs):
+    def __init__(self, container: ttk.Frame, webcam_section_frame: DataWebcamSectionFrame, **kwargs):
         super().__init__(container, **kwargs)
 
         # row & col config:
@@ -23,6 +24,6 @@ class ClassesSectionFrame(ttk.Frame):
         add_button = ttk.Button(
             self,
             text="Add Class:",
-            command=self.classes_window.addClass
+            command=lambda: self.classes_window.addClass(webcam_section_frame)
         )
         add_button.grid(row=1, column=0, padx=5, pady=5)

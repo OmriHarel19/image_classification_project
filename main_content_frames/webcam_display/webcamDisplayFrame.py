@@ -23,7 +23,7 @@ class WebcamDisplayFrame(ttk.Frame):
         self.video_canvas.pack()
 
         # delay between each frame in milliseconds
-        self.delay = 15
+        self.delay = 5
 
         # call update:
         self.update()

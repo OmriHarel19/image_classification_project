@@ -18,12 +18,12 @@ class DataFrame(SectionFrame):
         data_main_frame.rowconfigure(0, weight=1)
         data_main_frame.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW")  # expand in both axis
 
-        # classes section container:
-        classes_section_frame = ClassesSectionFrame(data_main_frame)
-        classes_section_frame.grid(row=0, column=0, padx=5, pady=5, sticky="NSEW")
-
         # webcam container:
-        webcam_container = DataWebcamSectionFrame(data_main_frame, style="Background3.TFrame")
+        webcam_container = DataWebcamSectionFrame(data_main_frame, " ", style="Background3.TFrame")
         webcam_container.grid(row=0, column=1, padx=5, pady=5, sticky="NSEW")
+
+        # classes section container:
+        classes_section_frame = ClassesSectionFrame(data_main_frame, webcam_container)
+        classes_section_frame.grid(row=0, column=0, padx=5, pady=5, sticky="NSEW")
 
 
