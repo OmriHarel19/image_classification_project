@@ -32,12 +32,13 @@ class ClassFrame(ttk.Frame):
         self.class_name_textbox.grid(row=0, column=0, padx=2, pady=2, sticky="W")
 
         # options combobox:
+        self.current_option = tk.StringVar()
         self.options_combobox = ttk.Combobox(
             self,
-            values=("delete class", "disable class", "enable class", "download samples"),
-            state="readonly"
+            values=("delete class", "disable class", "enable class", "delete all samples"),
+            state="readonly",
+            textvariable=self.current_option
         )
-
         self.options_combobox.grid(row=0, column=1, padx=2, pady=2, sticky="E")
 
         # 2nd row: separator

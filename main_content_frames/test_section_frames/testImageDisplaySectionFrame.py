@@ -22,13 +22,26 @@ class TestImageDisplaySectionFrame(ttk.Frame):
         self.buttons_frame = ttk.Frame(self)
         self.buttons_frame.grid(row=0, column=0, padx=5, pady=5, sticky="EW")
 
+        # webcam buttons containter
+        self.webcam_buttons_container = ttk.Frame(self.buttons_frame)
+        self.webcam_buttons_container.columnconfigure(0, weight=1)
+        self.webcam_buttons_container.grid(row=0, column=0, padx=5, pady=5, sticky="EW")
+
         # webcam button:
         self.webcam_button = ttk.Button(
-            self.buttons_frame,
+            self.webcam_buttons_container,
             text="webcam",
             command=self.webcam_display
         )
-        self.webcam_button.grid(row=0, column=0, padx=2, pady=2, sticky="E")
+        self.webcam_button.grid(row=0, column=0, padx=2, pady=2, sticky="W")
+
+        # stop webcam button:
+        self.stop_webcam_button = ttk.Button(
+            self.webcam_buttons_container,
+            text="stop webcam",
+            command=self.stop_webcam
+        )
+        self.stop_webcam_button.grid(row=1, column=0, padx=2, pady=2, sticky="W")
 
         # upload button:
         self.upload_button = ttk.Button(
@@ -43,20 +56,22 @@ class TestImageDisplaySectionFrame(ttk.Frame):
         # switching frame with tkraise()
 
         self.image_display_frame = ttk.Frame(self, style="Background1.TFrame")
+        self.image_display_frame.columnconfigure(0, weight=1)
+        self.image_display_frame.rowconfigure(0, weight=1)
         self.image_display_frame.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW")
 
         # webcam display canvas
 
-        self.webcam_display_container = ttk.Frame(self)
-        self.webcam_display_container.columnconfigure(0, weight=1)
-        self.webcam_display_container.rowconfigure(0, weight=1)
-        self.webcam_display_container.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW")
+        self.webcam_display_container = ttk.Frame(self.image_display_frame)
+        # self.webcam_display_container.columnconfigure(0, weight=1)
+        # self.webcam_display_container.rowconfigure(0, weight=1)
+        self.webcam_display_container.grid(row=0, column=0, padx=5, pady=5, sticky="NSEW")
 
         # upload display label
-        self.display_label_container = ttk.Frame(self)
-        self.display_label_container.columnconfigure(0, weight=1)
-        self.display_label_container.rowconfigure(0, weight=1)
-        self.display_label_container.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW")
+        self.display_label_container = ttk.Frame(self.image_display_frame)
+        # self.display_label_container.columnconfigure(0, weight=1)
+        # self.display_label_container.rowconfigure(0, weight=1)
+        self.display_label_container.grid(row=0, column=0, padx=5, pady=5, sticky="NSEW")
 
         self.display_label = ttk.Label(
             self.display_label_container,
@@ -99,7 +114,7 @@ class TestImageDisplaySectionFrame(ttk.Frame):
 
         try:
             # create WebcamDisplayFrame inside image_display_frame
-            webcam_display = WebcamDisplayFrame(self.webcam_display_container, video_source=0)
+            webcam_display = WebcamDisplayFrame(self.webcam_display_container, allow_recording=False, training_class=None, video_source=0)
             webcam_display.grid(row=0, column=0, sticky="NSEW")
 
             # raise frame
@@ -107,3 +122,9 @@ class TestImageDisplaySectionFrame(ttk.Frame):
 
         except ValueError:
             self.display_label["text"] = "no video source detected"
+
+    # stop webcam display in
+    def stop_webcam(self):
+        # destroy all existing objects inside webcam_section_frame.webcam_display_container (from any other class)
+        for child in self.webcam_display_container.winfo_children():
+            child.destroy()

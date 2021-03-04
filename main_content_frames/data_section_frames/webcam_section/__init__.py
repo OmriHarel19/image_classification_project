@@ -1,1 +1,1 @@
-from main_content_frames.data_section_frames.webcam_section.dataWebcamSectionFrame import DataWebcamSectionFrame
+from main_content_frames.data_section_frames.classes_section.trainingClass import TrainingClass

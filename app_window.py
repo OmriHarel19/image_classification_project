@@ -19,7 +19,7 @@ class AppWindow(tk.Tk):
         super().__init__(*args, **kwargs)
 
         # set general window properties
-        self.geometry("1400x800")
+        self.geometry("1600x800")
         # self.resizable(False, False)
         self.title("image classifier")
 

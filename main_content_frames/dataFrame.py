@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from .sectionFrame import SectionFrame
 from main_content_frames.data_section_frames import ClassesSectionFrame
-from main_content_frames.data_section_frames.webcam_section import DataWebcamSectionFrame
+from main_content_frames.data_section_frames.webcam_section.dataWebcamSectionFrame import DataWebcamSectionFrame
 
 
 class DataFrame(SectionFrame):
@@ -19,7 +19,7 @@ class DataFrame(SectionFrame):
         data_main_frame.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW")  # expand in both axis
 
         # webcam container:
-        webcam_container = DataWebcamSectionFrame(data_main_frame, " ", style="Background3.TFrame")
+        webcam_container = DataWebcamSectionFrame(data_main_frame, training_class=None, style="Background3.TFrame")
         webcam_container.grid(row=0, column=1, padx=5, pady=5, sticky="NSEW")
 
         # classes section container:

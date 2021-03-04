@@ -24,6 +24,6 @@ class ClassesSectionFrame(ttk.Frame):
         add_button = ttk.Button(
             self,
             text="Add Class:",
-            command=lambda: self.classes_window.addClass(webcam_section_frame)
+            command=lambda: self.classes_window.add_class(webcam_section_frame)
         )
         add_button.grid(row=1, column=0, padx=5, pady=5)
