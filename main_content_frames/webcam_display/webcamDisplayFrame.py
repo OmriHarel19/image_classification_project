@@ -64,7 +64,7 @@ class WebcamDisplayFrame(ttk.Frame):
                 self.training_class.samples = np.append(self.training_class.samples, recorded_img, axis=0)
                 # update sample counter label:
                 self.training_class.class_frame.sample_counter += 1
-                self.training_class.class_frame.label_text.set(f"{self.training_class.class_frame.sample_counter} image samples")
+                self.training_class.class_frame.sample_counter_label_text.set(f"{self.training_class.class_frame.sample_counter} image samples")
 
             # display webcam on canvas
             img = Image.fromarray(frame)

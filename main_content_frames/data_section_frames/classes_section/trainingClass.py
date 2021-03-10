@@ -15,6 +15,8 @@ from main_content_frames.data_section_frames.webcam_section.dataWebcamSectionFra
 
 from main_content_frames.webcam_display import *
 
+from typing import List
+
 #       --constants--
 
 IMG_HEIGHT = 224
@@ -26,10 +28,10 @@ IMG_WIDTH = 224
 # a training class object, contains the:
 # classFrame, class samples and class state
 class TrainingClass:
-    def __init__(self, container: ttk.Frame, class_num: int, webcam_section_frame: DataWebcamSectionFrame, **kwargs):
+    def __init__(self, container: ttk.Frame, class_num: int, classes_list: List, webcam_section_frame: DataWebcamSectionFrame, **kwargs):
 
         #       --properties--
-        self.img_width, self.img_height = (224, 224)
+        self.img_width, self.img_height = (128, 128)
         self.samples = np.empty(shape=(0, self.img_width, self.img_height, 3))  # 4 dim array containing class image samples
         self.enabled = True  # boolean state of the class
         self.class_frame = ClassFrame(container=container, class_num=class_num)
@@ -38,13 +40,16 @@ class TrainingClass:
         self.class_frame.upload_button["command"] = self.upload_images
         self.class_frame.webcam_button["command"] = lambda: self.display_webcam(webcam_section_frame)
         # set option list binding
-        self.class_frame.options_combobox.bind("<<ComboboxSelected>>", self.options_menu)
+        self.class_frame.options_combobox.bind("<<ComboboxSelected>>", lambda event: self.options_menu(event, classes_list=classes_list))
         self.class_frame.options_combobox.set("enable class")
 
     #       --setters & getters--
 
     def get_class_name(self):
         return self.class_frame.class_name_textbox.get("1.0", "end")
+
+    def is_enabled(self):
+        return self.enabled
 
     # ----------------------------------------------
 
@@ -85,7 +90,7 @@ class TrainingClass:
 
             # update sample counter label:
             self.class_frame.sample_counter += current_samples.shape[0]
-            self.class_frame.label_text.set(f"{self.class_frame.sample_counter} image samples")
+            self.class_frame.sample_counter_label_text.set(f"{self.class_frame.sample_counter} image samples")
 
     # triggered when the webcam button of a specific class is pressed
     # creates a new WebcamDisplayFrame for the current class, and displays webcam footage
@@ -112,34 +117,44 @@ class TrainingClass:
 
     # triggered when an option is selected from the option combobox of a certain class
     # calls the method of the selected option
-    def options_menu(self, event):  # event = ComboboxSelected - a selection of one of the options
+    def options_menu(self, event, classes_list):  # event = ComboboxSelected - a selection of one of the options
 
-        # options dict: keys=option, values=function to call
-        options = {"delete class": self.delete,
-                   "disable class": self.disable_class,
-                   "enable class": self.enable_class,
-                   "delete all samples": self.delete_samples
-                   }
+        # delete is a special option - requires the classes list to remove the Training class obj from the
+        if self.class_frame.current_option.get() == "delete class":
+            self.delete(classes_list)
+        else:
+            # options dict: keys=option, values=function to call
+            options = {"disable class": self.disable_class,
+                       "enable class": self.enable_class,
+                       "delete all samples": self.delete_samples
+                       }
 
-        # call the selected option method
-        options[self.class_frame.current_option.get()]()
+            # call the selected option method
+            options[self.class_frame.current_option.get()]()
 
     #       --options methods--
-    def delete(self):
+
+    def delete(self, classes_list: List):
+        # remove the TrainingClass obj from the classes list
+        for training_class in classes_list:
+            if training_class == self:  # comparing pointers
+                classes_list.remove(training_class)
+        # destroy the ttk class frame
         self.class_frame.destroy()
+        # delete self
         del self
 
     def disable_class(self):
         self.enabled = False
-        print(f"class {self.class_frame.class_name} is disabled")
+        self.class_frame.class_state_label_text.set(f"class disabled")
 
     def enable_class(self):
         self.enabled = True
-        print(f"class {self.class_frame.class_name} is enabled")
+        self.class_frame.class_state_label_text.set(f"class enabled")
 
     def delete_samples(self):
         # initialize sample as an empty np array
         self.samples = np.empty(shape=(0, self.img_width, self.img_height, 3))
         # update sample counter
         self.class_frame.sample_counter = 0
-        self.class_frame.label_text.set(f"{self.class_frame.sample_counter} image samples")
+        self.class_frame.sample_counter_label_text.set(f"{self.class_frame.sample_counter} image samples")

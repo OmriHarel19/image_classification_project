@@ -15,7 +15,7 @@ class ClassesWindow(ScrollableWindow):
 
     # the method triggered by the "add class" button
     def add_class(self, webcam_section_frame: DataWebcamSectionFrame):
-        new_class = TrainingClass(container=self.scrollable_frame, class_num=self.class_num, webcam_section_frame=webcam_section_frame)  # create a new class obj
+        new_class = TrainingClass(container=self.scrollable_frame, class_num=self.class_num, classes_list=self.classes_list, webcam_section_frame=webcam_section_frame)  # create a new class obj
         self.class_num += 1  # increase class counter
         self.classes_list.append(new_class)  # add new class to list
         new_class.class_frame.grid(padx=5, pady=20, sticky="EW")  # add new classFrame to the window
@@ -23,3 +23,12 @@ class ClassesWindow(ScrollableWindow):
         # scroll down to the end of the scrollable area to the latest added class:
         self.after(150, lambda: self.yview_moveto(1.0))
 
+    # triggered by the train button
+    def get_enabled_classes(self):
+        enabled_classes = []
+        # run on all existing classes
+        for training_class in self.classes_list:
+            if training_class.is_enabled():  # if enabled for training
+                enabled_classes.append(training_class)
+
+        return enabled_classes

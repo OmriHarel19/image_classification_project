@@ -45,18 +45,27 @@ class ClassFrame(ttk.Frame):
         separator = ttk.Separator(self, orient="horizontal")
         separator.grid(row=1, column=0, columnspan=2, padx=2, pady=2, sticky="EW")
 
-        # 3rd row: "x image samples" label
+        # 3rd row: "x image samples" label, and class state label:
+
+        self.class_state_label_text = tk.StringVar(value="class enabled")
+        self.class_state_label = ttk.Label(
+            self,
+            textvariable=self.class_state_label_text,
+            foreground="red",
+            font=("TkDefaultFont", 10)
+        )
+        self.class_state_label.grid(row=2, column=1, padx=2, pady=2)
 
         self.sample_counter = 0
-        self.label_text = tk.StringVar(value=f"{self.sample_counter} image samples")
+        self.sample_counter_label_text = tk.StringVar(value=f"{self.sample_counter} image samples")
 
         self.sample_counter_label = ttk.Label(
             self,
-            textvariable=self.label_text,
+            textvariable=self.sample_counter_label_text,
             foreground="blue",
             font=("TkDefaultFont", 10)
         )
-        self.sample_counter_label.grid(row=2, column=0, columnspan=2, padx=2, pady=2)
+        self.sample_counter_label.grid(row=2, column=0, padx=2, pady=2)
 
         # 4th row: collect data buttons:
 

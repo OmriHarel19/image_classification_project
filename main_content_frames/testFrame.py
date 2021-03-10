@@ -13,8 +13,9 @@ class TestFrame(SectionFrame):
 
         # row & col config: first row takes twice as much space as the second row
         self.test_main_frame.columnconfigure(0, weight=1)
-        self.test_main_frame.rowconfigure(0, weight=4)
-        self.test_main_frame.rowconfigure(1, weight=1)
+        self.test_main_frame.rowconfigure(0, weight=1)
+        # self.test_main_frame.rowconfigure(0, weight=4)
+        # self.test_main_frame.rowconfigure(1, weight=1)
 
         self.test_main_frame.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW")
 

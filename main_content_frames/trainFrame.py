@@ -2,13 +2,18 @@ import tkinter as tk
 from tkinter import ttk
 import numpy as np
 from .sectionFrame import SectionFrame
+from main_content_frames.data_section_frames.classes_section.classesWindow import ClassesWindow
+from main_content_frames.data_section_frames.classes_section.trainingClass import TrainingClass
+from main_content_frames.train_section.mobileNetModel import MnetModel
 
-from typing import Union
+from typing import Union, List
 
 
 class TrainFrame(SectionFrame):
-    def __init__(self, container: ttk.Frame, frame_title: str, **kwargs):
+    def __init__(self, container: ttk.Frame, frame_title: str, classes_window: ClassesWindow, **kwargs):
         super().__init__(container, frame_title, **kwargs)
+
+        self.classifier = None
 
         #       --training option widgets--
 
@@ -28,7 +33,8 @@ class TrainFrame(SectionFrame):
         # button:
         train_button = ttk.Button(
             train_button_container,
-            text="Train model:"
+            text="Train model:",
+            command=lambda: self.train_model(classes_window.classes_list)
         )
         train_button.grid()
 
@@ -122,6 +128,45 @@ class TrainFrame(SectionFrame):
 
         for widget in self.option_widget_list:
             widget.reset_option()
+
+    # triggered by the train model button
+    def train_model(self, classes_list: List[TrainingClass]):
+        # 1. at least two training classes - done
+        # 2. each class contains at least x samples (x to be decided) - not done
+
+        if len(classes_list) >= 2:
+            # create train_data np array
+            sample_arrays = [training_class.samples for training_class in classes_list]
+            train_data = np.concatenate(sample_arrays, axis=0)
+
+            '''
+            total_sample_count = 0
+            sample_counter = 0
+            train_data = np.empty((total_sample_count,))
+            for sample_array in range(sample_arrays):
+                for i in range(len(sample_array)):
+                    train_data[sample_counter] = sample_array[i]
+                    sample_counter += 1
+            '''
+
+            # create train_labels np array:
+            train_labels = []
+            for class_label, sample_array in enumerate(sample_arrays):
+                for i in range(sample_array.shape[0]):
+                    train_labels.append(class_label)
+            print(f"train_labels as a normal list: {train_labels}")
+
+            train_labels = np.array(train_labels)[:, np.newaxis]
+            print(f"converting to np array: {train_labels.shape}")
+
+            # build & trained classifier:
+            self.classifier = MnetModel(train_data, train_labels, epochs=1, batch_size=16, lr=0.001)  # instantiate the model
+            self.classifier.train_model()  # train
+
+            # test the trained model
+            self.classifier.display_predictions(*self.classifier.get_random_batch("test"))
+        else:
+            print("need at least two training classes!")
 
 
 # a frame containing a label and an option widget:

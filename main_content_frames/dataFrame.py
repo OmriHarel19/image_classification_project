@@ -14,7 +14,7 @@ class DataFrame(SectionFrame):
         # data_main_frame.columnconfigure((0, 1), weight=1)  # split the frame equally between the classes % webcam frames
 
         # some bug with the splitting, meanwhile col 1 (of the webcam) gets all available space
-        data_main_frame.columnconfigure((0, 1), weight=1)
+        data_main_frame.columnconfigure(1, weight=1)
         data_main_frame.rowconfigure(0, weight=1)
         data_main_frame.grid(row=1, column=0, padx=5, pady=5, sticky="NSEW")  # expand in both axis
 
@@ -23,7 +23,7 @@ class DataFrame(SectionFrame):
         webcam_container.grid(row=0, column=1, padx=5, pady=5, sticky="NSEW")
 
         # classes section container:
-        classes_section_frame = ClassesSectionFrame(data_main_frame, webcam_container)
-        classes_section_frame.grid(row=0, column=0, padx=5, pady=5, sticky="NSEW")
+        self.classes_section_frame = ClassesSectionFrame(data_main_frame, webcam_container)
+        self.classes_section_frame.grid(row=0, column=0, padx=5, pady=5, sticky="NSEW")
 
 
