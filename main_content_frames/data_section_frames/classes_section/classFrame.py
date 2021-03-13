@@ -19,17 +19,15 @@ class ClassFrame(ttk.Frame):
         # 1st row: class name textbox & and options combobox
 
         # class name textbox:
-        self.class_name = f"Class {class_num}"
-        self.class_name_textbox = tk.Text(
-            self,
-            height=1,  # height in lines
-            width=15,  # width in characters
-            padx=3,
-            state="normal"  # can be edited
-        )
-        self.class_name_textbox.insert("1.0", self.class_name)
+        self.class_name = tk.StringVar(value=f"Class {class_num}")
 
-        self.class_name_textbox.grid(row=0, column=0, padx=2, pady=2, sticky="W")
+        self.class_name_entry = ttk.Entry(
+            self,
+            width=15,
+            textvariable=self.class_name,
+        )
+
+        self.class_name_entry.grid(row=0, column=0, padx=2, pady=2, sticky="W")
 
         # options combobox:
         self.current_option = tk.StringVar()

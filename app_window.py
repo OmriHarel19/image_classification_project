@@ -19,7 +19,7 @@ class AppWindow(tk.Tk):
         super().__init__(*args, **kwargs)
 
         # set general window properties
-        self.geometry("1600x800")
+        self.geometry("1600x900")
         # self.resizable(False, False)
         self.title("image classifier")
 
@@ -95,10 +95,14 @@ class ClassifierContainer(ttk.Frame):
 
         data_frame = DataFrame(self, frame_title="Data:")
         data_frame.grid(row=0, column=0, padx=5, pady=5, sticky="NSEW")
-        train_frame = TrainFrame(self, frame_title="Training:", classes_window=data_frame.classes_section_frame.classes_window)
-        train_frame.grid(row=0, column=1, padx=5, pady=5, sticky="NSEW")
+
         test_frame = TestFrame(self, frame_title="Test:")
         test_frame.grid(row=0, column=2, padx=5, pady=5, sticky="NSEW")
+
+        train_frame = TrainFrame(self, frame_title="Training:",
+                                 classes_window=data_frame.classes_section_frame.classes_window,
+                                 test_frame=test_frame)
+        train_frame.grid(row=0, column=1, padx=5, pady=5, sticky="NSEW")
 
 
 root = AppWindow()

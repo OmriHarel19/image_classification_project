@@ -2,6 +2,8 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
 
+from typing import List
+
 # imports for model:
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Dropout
@@ -10,11 +12,14 @@ from tensorflow.keras import regularizers
 
 
 class MnetModel:
-    def __init__(self, train_data: np.array, train_labels: np.array, epochs: int, batch_size: int, lr: float):
+    def __init__(self, train_data: np.array, train_labels: np.array, classes_names: List[str], epochs: int, batch_size: int, lr: float):
         # properties:
         self.data = train_data
         self.labels = train_labels
         self.model = None
+
+        self.classes_names = classes_names
+        self.classes_num = len(self.classes_names)
 
         self.epochs = epochs
         self.batch_size = batch_size
@@ -29,6 +34,15 @@ class MnetModel:
 
         # 3. create model
         self.create_model()
+
+    # setters & getters:
+    def get_number_of_classes(self):
+        return self.classes_num
+
+    def get_classes_names(self):
+        return self.classes_names
+
+    # --------------------------------------------------------------------------
 
     #   -- class methods--
 
@@ -104,6 +118,10 @@ class MnetModel:
         while True:
             data, labels = self.get_random_batch(data_set)
             yield data, labels
+
+    def evaluate_model(self):
+        test_loss, test_accuracy = self.model.evaluate(self.x_test, self.y_test, verbose=2)
+        return test_loss, test_accuracy
 
     def display_predictions(self, test_batch, test_labels):
 

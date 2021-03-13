@@ -3,16 +3,26 @@ from tkinter import ttk
 from tkinter import filedialog
 import os
 from PIL import Image, ImageTk
+import numpy as np
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
 from main_content_frames.webcam_display import *
+from main_content_frames.train_section.mobileNetModel import MnetModel
+from .predictionsWindow import PredictionsWindow
+from .predictionFrame import PredictionFrame
+
+from typing import List
 
 
 class TestImageDisplaySectionFrame(ttk.Frame):
-    def __init__(self, container: ttk.Frame, **kwargs):
+    def __init__(self, container: ttk.Frame, predictions_window: PredictionsWindow, **kwargs):
         super().__init__(container, **kwargs)
 
         self.upload_img = None
+        self.trained_classifier = None
+
+        self.preds_window = predictions_window
 
         # row & col config:
         self.columnconfigure(0, weight=1)
@@ -31,6 +41,7 @@ class TestImageDisplaySectionFrame(ttk.Frame):
         self.webcam_button = ttk.Button(
             self.webcam_buttons_container,
             text="webcam",
+            state="disabled",  # test section starts disabled
             command=self.webcam_display
         )
         self.webcam_button.grid(row=0, column=0, padx=2, pady=2, sticky="W")
@@ -39,6 +50,7 @@ class TestImageDisplaySectionFrame(ttk.Frame):
         self.stop_webcam_button = ttk.Button(
             self.webcam_buttons_container,
             text="stop webcam",
+            state="disabled",  # test section starts disabled
             command=self.stop_webcam
         )
         self.stop_webcam_button.grid(row=1, column=0, padx=2, pady=2, sticky="W")
@@ -47,9 +59,12 @@ class TestImageDisplaySectionFrame(ttk.Frame):
         self.upload_button = ttk.Button(
             self.buttons_frame,
             text="upload",
+            state="disabled",  # test section starts disabled
             command=self.upload_test_image
         )
         self.upload_button.grid(row=0, column=1, padx=2, pady=2, sticky="W")
+
+        self.buttons_list = [self.webcam_button, self.stop_webcam_button, self.upload_button]
 
         # row 1: image display frame: for image upload & webcam display
         # contains both display label for upload and display canvas for webcam
@@ -82,7 +97,14 @@ class TestImageDisplaySectionFrame(ttk.Frame):
         self.display_label.pack(expand=True, fill="both", padx=5, pady=5)
         ''''''
 
-    # upload test image from file explorer and display in image_display_frame
+    # setters & getters:
+
+    def set_trained_classifier(self, trained_classifier: MnetModel):
+        self.trained_classifier = trained_classifier
+
+    # ------------------------------------------------------------------------------------------
+
+    # triggered by the upload button - upload test image from file explorer and display in image_display_frame
     def upload_test_image(self):
         # destroy all existing objects inside webcam_display_container
         for child in self.webcam_display_container.winfo_children():
@@ -96,9 +118,8 @@ class TestImageDisplaySectionFrame(ttk.Frame):
         )
 
         if file_path != "":  # check that a file was selected
-            # load image
+            # ----load image for display----
             self.upload_img = Image.open(file_path)
-            print("Image.open: ", type(self.upload_img))
             self.upload_img.thumbnail((300, 300))
             self.upload_img = ImageTk.PhotoImage(self.upload_img)
             # put on label
@@ -108,13 +129,21 @@ class TestImageDisplaySectionFrame(ttk.Frame):
             # raise frame
             self.display_label_container.tkraise()
 
-    # display webcam footage in image_display_frame
+            # ----load image for model----
+            img = load_img(file_path, color_mode='rgb', target_size=(128, 128))  # remember to change the hard code
+            img = img_to_array(img)[np.newaxis, ...]  # add the batch_size dimension
+            img = preprocess_input(img)  # pre-process input
+            # predict:
+            self.display_predictions_on_img(img, self.preds_window.prediction_frames)
+
+    # triggered by the webcam button - display webcam footage in image_display_frame
     def webcam_display(self):
         # destroy all existing objects inside webcam_section_frame.webcam_display_container (from any other class)
 
         try:
             # create WebcamDisplayFrame inside image_display_frame
-            webcam_display = WebcamDisplayFrame(self.webcam_display_container, allow_recording=False, training_class=None, video_source=0)
+            webcam_display = WebcamDisplayFrame(self.webcam_display_container, allow_recording=False,
+                                                training_class=None, video_source=0)
             webcam_display.grid(row=0, column=0, sticky="NSEW")
 
             # raise frame
@@ -123,8 +152,23 @@ class TestImageDisplaySectionFrame(ttk.Frame):
         except ValueError:
             self.display_label["text"] = "no video source detected"
 
-    # stop webcam display in
+    # triggered by the stop webcam button -stop the webcam display
     def stop_webcam(self):
         # destroy all existing objects inside webcam_section_frame.webcam_display_container (from any other class)
         for child in self.webcam_display_container.winfo_children():
             child.destroy()
+
+    def display_predictions_on_img(self, img_array: np.array, prediction_frames_list: List[PredictionFrame]):
+        # use model to predict on the given img
+        prediction = self.trained_classifier.model.predict(img_array)
+        print(f"prediction: {prediction}")
+
+        # in case its a binary classifier: (a single prediction value is returned)
+        if self.trained_classifier.get_number_of_classes() == 2:
+            prediction_frames_list[0].set_prediction(1.0 - float(np.squeeze(prediction)))
+            print(f"pred of {prediction_frames_list[0].get_class_name()}: {1.0 - float(np.squeeze(prediction))}")
+            prediction_frames_list[1].set_prediction(float(np.squeeze(prediction)))
+            print(f"pred of {prediction_frames_list[1].get_class_name()}: {float(np.squeeze(prediction))}")
+        else:
+            for i, pred_frame in enumerate(prediction_frames_list):
+                pred_frame.set_prediction(float(np.squeeze(prediction[i])))

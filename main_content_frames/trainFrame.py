@@ -1,7 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 import numpy as np
+import threading
+import sys
+
 from .sectionFrame import SectionFrame
+from .testFrame import TestFrame
 from main_content_frames.data_section_frames.classes_section.classesWindow import ClassesWindow
 from main_content_frames.data_section_frames.classes_section.trainingClass import TrainingClass
 from main_content_frames.train_section.mobileNetModel import MnetModel
@@ -10,7 +14,7 @@ from typing import Union, List
 
 
 class TrainFrame(SectionFrame):
-    def __init__(self, container: ttk.Frame, frame_title: str, classes_window: ClassesWindow, **kwargs):
+    def __init__(self, container: ttk.Frame, frame_title: str, classes_window: ClassesWindow, test_frame: TestFrame, **kwargs):
         super().__init__(container, frame_title, **kwargs)
 
         self.classifier = None
@@ -34,7 +38,8 @@ class TrainFrame(SectionFrame):
         train_button = ttk.Button(
             train_button_container,
             text="Train model:",
-            command=lambda: self.train_model(classes_window.classes_list)
+            # command=lambda: self.train_model(classes_list=classes_window.classes_list, test_frame=test_frame)
+            command=threading.Thread(target=self.train_model, args=[classes_window.classes_list, test_frame]).start
         )
         train_button.grid()
 
@@ -129,8 +134,8 @@ class TrainFrame(SectionFrame):
         for widget in self.option_widget_list:
             widget.reset_option()
 
-    # triggered by the train model button
-    def train_model(self, classes_list: List[TrainingClass]):
+    # triggered by the train model button, runs in a thread to keep gui functional while training
+    def train_model(self, classes_list: List[TrainingClass], test_frame: TestFrame):
         # 1. at least two training classes - done
         # 2. each class contains at least x samples (x to be decided) - not done
 
@@ -138,16 +143,6 @@ class TrainFrame(SectionFrame):
             # create train_data np array
             sample_arrays = [training_class.samples for training_class in classes_list]
             train_data = np.concatenate(sample_arrays, axis=0)
-
-            '''
-            total_sample_count = 0
-            sample_counter = 0
-            train_data = np.empty((total_sample_count,))
-            for sample_array in range(sample_arrays):
-                for i in range(len(sample_array)):
-                    train_data[sample_counter] = sample_array[i]
-                    sample_counter += 1
-            '''
 
             # create train_labels np array:
             train_labels = []
@@ -159,12 +154,25 @@ class TrainFrame(SectionFrame):
             train_labels = np.array(train_labels)[:, np.newaxis]
             print(f"converting to np array: {train_labels.shape}")
 
+            # create the classes_names list:
+            classes_names = [training_class.get_class_name() for training_class in classes_list]
+
             # build & trained classifier:
-            self.classifier = MnetModel(train_data, train_labels, epochs=1, batch_size=16, lr=0.001)  # instantiate the model
+
+            self.classifier = MnetModel(train_data, train_labels, classes_names=classes_names, epochs=1, batch_size=16, lr=0.001)  # instantiate the model
             self.classifier.train_model()  # train
 
-            # test the trained model
+            # evaluate the trained model
+            test_loss, test_accuracy = self.classifier.evaluate_model()
+            print(f"Test loss: {test_loss}")
+            print(f"Test accuracy: {test_accuracy}")
+
+            # test on a random batch
             self.classifier.display_predictions(*self.classifier.get_random_batch("test"))
+
+            # activate testing section:
+            test_frame.start_testing(self.classifier)
+
         else:
             print("need at least two training classes!")
 

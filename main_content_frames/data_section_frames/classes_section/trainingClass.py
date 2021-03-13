@@ -46,7 +46,7 @@ class TrainingClass:
     #       --setters & getters--
 
     def get_class_name(self):
-        return self.class_frame.class_name_textbox.get("1.0", "end")
+        return self.class_frame.class_name.get()
 
     def is_enabled(self):
         return self.enabled
@@ -106,7 +106,7 @@ class TrainingClass:
             webcam_display.grid(row=0, column=0, sticky="NSEW")
 
             # add the calling class name
-            curr_class_name = self.class_frame.class_name_textbox.get("1.0", "end")
+            curr_class_name = self.get_class_name()
             webcam_section_frame.current_class_name.set(curr_class_name)
 
         except ValueError:
