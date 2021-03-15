@@ -9,6 +9,7 @@ from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Dropout
 from tensorflow.keras.models import Sequential
 from tensorflow.keras import regularizers
+from tensorflow.keras.optimizers import Adam
 
 
 class MnetModel:
@@ -68,7 +69,9 @@ class MnetModel:
         complete_model.layers[0].trainable = False
 
         # compile:
-        complete_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+        complete_model.compile(loss='binary_crossentropy',
+                               optimizer=Adam(learning_rate=self.lr),
+                               metrics=['accuracy'])
 
         self.model = complete_model
 
@@ -81,7 +84,7 @@ class MnetModel:
             validation_data=self.data_generator("test"),
             steps_per_epoch=steps_per_epoch,
             validation_steps=validation_steps,
-            epochs=5
+            epochs=self.epochs
         )
 
     #       --training methods--

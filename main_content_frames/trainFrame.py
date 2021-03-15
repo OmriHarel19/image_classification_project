@@ -39,7 +39,7 @@ class TrainFrame(SectionFrame):
             train_button_container,
             text="Train model:",
             # command=lambda: self.train_model(classes_list=classes_window.classes_list, test_frame=test_frame)
-            command=threading.Thread(target=self.train_model, args=[classes_window.classes_list, test_frame]).start
+            command=lambda: self.run_training_thread(classes_list=classes_window.classes_list, test_frame=test_frame)
         )
         train_button.grid()
 
@@ -59,11 +59,11 @@ class TrainFrame(SectionFrame):
 
         # 2.a epochs spinbox:
         epochs_widget_frame = OptionWidgetFrame(option_widgets_frame, widget_description="epochs:",
-                                                init_val=25)  # create OptionWidgetFrame
+                                                init_val=5)  # create OptionWidgetFrame
         # create the widget, inside the OptionWidgetFrame
         epochs_widget = ttk.Spinbox(
             epochs_widget_frame,
-            value=tuple([i for i in range(5, 55, 5)]),
+            value=tuple([i for i in range(1, 11, 1)]),
             wrap=False,
             state="readonly"
         )
@@ -75,11 +75,11 @@ class TrainFrame(SectionFrame):
         epochs_widget_frame.grid(row=0, column=0, padx=5, pady=5, sticky="EW")
 
         # 2.b batch size combobox:
-        batch_size_widget_frame = OptionWidgetFrame(option_widgets_frame, widget_description="batch size:", init_val=32)
+        batch_size_widget_frame = OptionWidgetFrame(option_widgets_frame, widget_description="batch size:", init_val=16)
 
         batch_size_widget = ttk.Combobox(
             batch_size_widget_frame,
-            values=tuple([2 ** i for i in range(4, 10)]),
+            values=tuple([2 ** i for i in range(3, 8)]),
             state="readonly"
         )
 
@@ -134,12 +134,19 @@ class TrainFrame(SectionFrame):
         for widget in self.option_widget_list:
             widget.reset_option()
 
+    def run_training_thread(self, classes_list: List[TrainingClass], test_frame: TestFrame):
+        training_thread = threading.Thread(target=self.train_model, args=[classes_list, test_frame])
+        training_thread.start()
+
     # triggered by the train model button, runs in a thread to keep gui functional while training
     def train_model(self, classes_list: List[TrainingClass], test_frame: TestFrame):
-        # 1. at least two training classes - done
+        # 1. at least two enabled training classes - done
         # 2. each class contains at least x samples (x to be decided) - not done
 
-        if len(classes_list) >= 2:
+        # get all enabled classes
+        enabled_classes = [training_class for training_class in classes_list if training_class.is_enabled()]
+
+        if len(enabled_classes) >= 2:
             # create train_data np array
             sample_arrays = [training_class.samples for training_class in classes_list]
             train_data = np.concatenate(sample_arrays, axis=0)
@@ -159,8 +166,17 @@ class TrainFrame(SectionFrame):
 
             # build & trained classifier:
 
-            self.classifier = MnetModel(train_data, train_labels, classes_names=classes_names, epochs=1, batch_size=16, lr=0.001)  # instantiate the model
-            self.classifier.train_model()  # train
+            # instantiate the model:
+
+            selected_options = [widget.get_selection() for widget in self.option_widget_list]
+
+            self.classifier = MnetModel(train_data, train_labels, classes_names=classes_names,
+                                        epochs=int(selected_options[0]),
+                                        batch_size=int(selected_options[1]),
+                                        lr=float(selected_options[2])
+                                        )
+            # train
+            self.classifier.train_model()
 
             # evaluate the trained model
             test_loss, test_accuracy = self.classifier.evaluate_model()
@@ -210,6 +226,9 @@ class OptionWidgetFrame(ttk.Frame):
         self.option_widget = option_widget
         self.option_widget["textvariable"] = self.widget_val  # add textvariable to the widget
         self.option_widget.grid(row=0, column=1, padx=(0, 10), sticky="E")
+
+    def get_selection(self):
+        return self.widget_val.get()
 
 
 ''' all specific WidgetFrame classes

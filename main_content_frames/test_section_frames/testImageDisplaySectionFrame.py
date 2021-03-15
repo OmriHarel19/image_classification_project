@@ -7,7 +7,7 @@ import numpy as np
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
-from main_content_frames.webcam_display import *
+from main_content_frames.webcam_display.testWebcamDisplayFrame import TestWebcamDisplayFrame
 from main_content_frames.train_section.mobileNetModel import MnetModel
 from .predictionsWindow import PredictionsWindow
 from .predictionFrame import PredictionFrame
@@ -95,7 +95,6 @@ class TestImageDisplaySectionFrame(ttk.Frame):
             font=("TkDefaultFont", 15),
         )
         self.display_label.pack(expand=True, fill="both", padx=5, pady=5)
-        ''''''
 
     # setters & getters:
 
@@ -139,11 +138,9 @@ class TestImageDisplaySectionFrame(ttk.Frame):
     # triggered by the webcam button - display webcam footage in image_display_frame
     def webcam_display(self):
         # destroy all existing objects inside webcam_section_frame.webcam_display_container (from any other class)
-
         try:
             # create WebcamDisplayFrame inside image_display_frame
-            webcam_display = WebcamDisplayFrame(self.webcam_display_container, allow_recording=False,
-                                                training_class=None, video_source=0)
+            webcam_display = TestWebcamDisplayFrame(self.webcam_display_container, test_image_display_section=self, video_source=0)
             webcam_display.grid(row=0, column=0, sticky="NSEW")
 
             # raise frame

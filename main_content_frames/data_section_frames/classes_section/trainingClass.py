@@ -13,7 +13,7 @@ from main_content_frames.data_section_frames.classes_section.classFrame import C
 
 from main_content_frames.data_section_frames.webcam_section.dataWebcamSectionFrame import DataWebcamSectionFrame
 
-from main_content_frames.webcam_display import *
+from main_content_frames.webcam_display.dataWebcamDisplayFrame import DataWebcamDisplayFrame
 
 from typing import List
 
@@ -28,11 +28,13 @@ IMG_WIDTH = 224
 # a training class object, contains the:
 # classFrame, class samples and class state
 class TrainingClass:
-    def __init__(self, container: ttk.Frame, class_num: int, classes_list: List, webcam_section_frame: DataWebcamSectionFrame, **kwargs):
+    def __init__(self, container: ttk.Frame, class_num: int, classes_list: List,
+                 webcam_section_frame: DataWebcamSectionFrame, **kwargs):
 
         #       --properties--
         self.img_width, self.img_height = (128, 128)
-        self.samples = np.empty(shape=(0, self.img_width, self.img_height, 3))  # 4 dim array containing class image samples
+        self.samples = np.empty(
+            shape=(0, self.img_width, self.img_height, 3))  # 4 dim array containing class image samples
         self.enabled = True  # boolean state of the class
         self.class_frame = ClassFrame(container=container, class_num=class_num)
 
@@ -40,7 +42,8 @@ class TrainingClass:
         self.class_frame.upload_button["command"] = self.upload_images
         self.class_frame.webcam_button["command"] = lambda: self.display_webcam(webcam_section_frame)
         # set option list binding
-        self.class_frame.options_combobox.bind("<<ComboboxSelected>>", lambda event: self.options_menu(event, classes_list=classes_list))
+        self.class_frame.options_combobox.bind("<<ComboboxSelected>>",
+                                               lambda event: self.options_menu(event, classes_list=classes_list))
         self.class_frame.options_combobox.set("enable class")
 
     #       --setters & getters--
@@ -101,8 +104,8 @@ class TrainingClass:
 
         try:
             # create WebcamDisplayFrame inside DataWebcamSectionFrame
-            webcam_display = WebcamDisplayFrame(webcam_section_frame.webcam_display_container, allow_recording=True,
-                                                training_class=self, video_source=0)
+            webcam_display = DataWebcamDisplayFrame(webcam_section_frame.webcam_display_container,
+                                                    training_class=self, video_source=0)
             webcam_display.grid(row=0, column=0, sticky="NSEW")
 
             # add the calling class name
