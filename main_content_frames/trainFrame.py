@@ -159,7 +159,7 @@ class TrainFrame(SectionFrame):
             print(f"train_labels as a normal list: {train_labels}")
 
             train_labels = np.array(train_labels)[:, np.newaxis]
-            print(f"converting to np array: {train_labels.shape}")
+            print(f"converting to np array: {train_labels}")
 
             # create the classes_names list:
             classes_names = [training_class.get_class_name() for training_class in classes_list]
@@ -175,6 +175,7 @@ class TrainFrame(SectionFrame):
                                         batch_size=int(selected_options[1]),
                                         lr=float(selected_options[2])
                                         )
+            ''''''
             # train
             self.classifier.train_model()
 
@@ -182,9 +183,6 @@ class TrainFrame(SectionFrame):
             test_loss, test_accuracy = self.classifier.evaluate_model()
             print(f"Test loss: {test_loss}")
             print(f"Test accuracy: {test_accuracy}")
-
-            # test on a random batch
-            self.classifier.display_predictions(*self.classifier.get_random_batch("test"))
 
             # activate testing section:
             test_frame.start_testing(self.classifier)

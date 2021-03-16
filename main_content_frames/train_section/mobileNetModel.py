@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 import tensorflow as tf
 
 from typing import List
@@ -13,10 +14,10 @@ from tensorflow.keras.optimizers import Adam
 
 
 class MnetModel:
-    def __init__(self, train_data: np.array, train_labels: np.array, classes_names: List[str], epochs: int, batch_size: int, lr: float):
+    def __init__(self, train_data: np.array, train_labels: np.array, classes_names: List[str], epochs: int,
+                 batch_size: int, lr: float):
         # properties:
-        self.data = train_data
-        self.labels = train_labels
+        self.data, self.labels = shuffle(train_data, train_labels)
         self.model = None
 
         self.classes_names = classes_names
@@ -31,7 +32,13 @@ class MnetModel:
             self.data[i] = preprocess_input(self.data[i])
 
         # 2. split to train & test sets (also shuffles the data set)
-        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.data, self.labels, test_size=0.3, shuffle=True)
+        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.data, self.labels, test_size=0.3,
+                                                                                shuffle=True)
+        print("data sets after split")
+        print(f"x_train shape: {self.x_train.shape}")
+        print(f"y_train shape: {self.y_train.shape}")
+        print(f"x_test shape: {self.x_test.shape}")
+        print(f"y_test shape: {self.y_test.shape}")
 
         # 3. create model
         self.create_model()
@@ -62,19 +69,55 @@ class MnetModel:
         complete_model = Sequential([
             mnet,  # load the mnet model as the first layer
             Dropout(0.5),  # add a dropout layer
-            Dense(1, activation='sigmoid')  # add the binary classification layer
+            Dense(100, activation='relu'),
+            Dropout(0.3)  # add a dropout layer
         ])
 
         # freeze the pre-trained weights of mnet:
         complete_model.layers[0].trainable = False
 
-        # compile:
-        complete_model.compile(loss='binary_crossentropy',
-                               optimizer=Adam(learning_rate=self.lr),
-                               metrics=['accuracy'])
+        print("before adding classifier layer:")
+        complete_model.summary()
+
+        ''''''
+        # create the classification layer according to the num of classes:
+
+        # in case we have a binary model
+        if self.classes_num == 2:
+            # add the binary classification layer
+            complete_model.add(Dense(1, activation='sigmoid'))
+
+            # compile with binary_crossentropy:
+            complete_model.compile(loss='binary_crossentropy',
+                                   optimizer=Adam(learning_rate=self.lr),
+                                   metrics=['accuracy'])
+
+        # in case of multi-class model
+        else:
+            # add the softmax classification layer
+            complete_model.add(Dense(self.classes_num, activation='softmax'))
+
+            # compile with sparse_categorical_crossentropy:
+            complete_model.compile(loss='sparse_categorical_crossentropy',
+                                   optimizer=Adam(learning_rate=self.lr),
+                                   metrics=['accuracy'])
+
+        print("after adding classifier layer:")
+        complete_model.summary()
 
         self.model = complete_model
 
+    def train_model(self):
+
+        _ = self.model.fit(
+            x=self.x_train,
+            y=self.y_train,
+            batch_size=self.batch_size,
+            epochs=self.epochs,
+            validation_data=(self.x_test, self.y_test)  # add callbacks later
+        )
+
+    '''
     def train_model(self):
         steps_per_epoch = len(self.x_train) // self.batch_size
         validation_steps = len(self.x_test) // self.batch_size
@@ -86,6 +129,7 @@ class MnetModel:
             validation_steps=validation_steps,
             epochs=self.epochs
         )
+    '''
 
     #       --training methods--
 
@@ -126,6 +170,7 @@ class MnetModel:
         test_loss, test_accuracy = self.model.evaluate(self.x_test, self.y_test, verbose=2)
         return test_loss, test_accuracy
 
+    # suited only for binary model - remember to change
     def display_predictions(self, test_batch, test_labels):
 
         predictions = self.model.predict(test_batch)
