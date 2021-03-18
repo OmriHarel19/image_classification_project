@@ -158,15 +158,15 @@ class TestImageDisplaySectionFrame(ttk.Frame):
     def display_predictions_on_img(self, img_array: np.array, prediction_frames_list: List[PredictionFrame]):
         # use model to predict on the given img
         prediction = self.trained_classifier.model.predict(img_array)[0]
-        print(f"prediction: {prediction}")
+        # print(f"prediction: {prediction}")
 
         # in case its a binary classifier: (a single prediction value is returned)
         if self.trained_classifier.get_number_of_classes() == 2:
             prediction_frames_list[0].set_prediction(1.0 - float(np.squeeze(prediction)))
-            print(f"pred of {prediction_frames_list[0].get_class_name()}: {1.0 - float(np.squeeze(prediction))}")
+            # print(f"pred of {prediction_frames_list[0].get_class_name()}: {1.0 - float(np.squeeze(prediction))}")
             prediction_frames_list[1].set_prediction(float(np.squeeze(prediction)))
-            print(f"pred of {prediction_frames_list[1].get_class_name()}: {float(np.squeeze(prediction))}")
+            # print(f"pred of {prediction_frames_list[1].get_class_name()}: {float(np.squeeze(prediction))}")
         else:
             for i, pred_frame in enumerate(prediction_frames_list):
                 pred_frame.set_prediction(float(np.max(prediction[i])))
-                print(f"pred of {prediction_frames_list[i].get_class_name()}: {float(np.max(prediction[i]))}")
+                # print(f"pred of {prediction_frames_list[i].get_class_name()}: {float(np.max(prediction[i]))}")

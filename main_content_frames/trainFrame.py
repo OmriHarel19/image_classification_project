@@ -30,7 +30,7 @@ class TrainFrame(SectionFrame):
         # 1. training button:
 
         # container:
-        train_button_container = ttk.Frame(widgets_container, style="Background2.TFrame")
+        train_button_container = ttk.Frame(widgets_container, style="Background1.TFrame")
         train_button_container.columnconfigure(0, weight=1)
         train_button_container.grid(row=0, column=0, padx=5, pady=10)
 
@@ -38,10 +38,18 @@ class TrainFrame(SectionFrame):
         train_button = ttk.Button(
             train_button_container,
             text="Train model:",
-            # command=lambda: self.train_model(classes_list=classes_window.classes_list, test_frame=test_frame)
             command=lambda: self.run_training_thread(classes_list=classes_window.classes_list, test_frame=test_frame)
         )
-        train_button.grid()
+        train_button.grid(row=0, column=0, pady=5)
+
+        # training progress label
+        self.training_label_text = tk.StringVar()
+        training_label = ttk.Label(  # making it a class property because other methods need access to it
+            train_button_container,
+            # style="Background1.TFrame",
+            textvariable=self.training_label_text
+        )
+        training_label.grid(row=1, column=0)
 
         # 2. options:
         self.option_widget_list = []
@@ -128,6 +136,11 @@ class TrainFrame(SectionFrame):
         reset_options_widget.grid(row=3, column=0, padx=5, pady=5, sticky="EW")
         '''
 
+    # setters & getters:
+
+    def set_training_label_text(self, text: str):
+        self.training_label_text.set(text)
+
     def reset_options(self):
         # reset all option widgets to their initial value
 
@@ -177,7 +190,7 @@ class TrainFrame(SectionFrame):
                                         )
             ''''''
             # train
-            self.classifier.train_model()
+            self.classifier.train_model(self.training_label_text)
 
             # evaluate the trained model
             test_loss, test_accuracy = self.classifier.evaluate_model()
@@ -188,7 +201,7 @@ class TrainFrame(SectionFrame):
             test_frame.start_testing(self.classifier)
 
         else:
-            print("need at least two training classes!")
+            self.set_training_label_text("need at least 2 enabled classes!")
 
 
 # a frame containing a label and an option widget:
