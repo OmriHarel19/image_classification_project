@@ -1,8 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import filedialog
 import numpy as np
 import threading
 import sys
+import os
+from zipfile import ZipFile
 
 from .sectionFrame import SectionFrame
 from .testFrame import TestFrame
@@ -31,7 +34,7 @@ class TrainFrame(SectionFrame):
 
         # container:
         train_button_container = ttk.Frame(widgets_container, style="Background1.TFrame")
-        train_button_container.columnconfigure(0, weight=1)
+        train_button_container.columnconfigure((0, 1), weight=1)
         train_button_container.grid(row=0, column=0, padx=5, pady=10)
 
         # button:
@@ -40,7 +43,14 @@ class TrainFrame(SectionFrame):
             text="Train model:",
             command=lambda: self.run_training_thread(classes_list=classes_window.classes_list, test_frame=test_frame)
         )
-        train_button.grid(row=0, column=0, pady=5)
+        train_button.grid(row=0, column=0, pady=5, padx=2, sticky="EW")
+
+        upload_model_button = ttk.Button(
+            train_button_container,
+            text="Upload model",
+            command=lambda: self.upload_model(test_frame=test_frame)
+        )
+        upload_model_button.grid(row=0, column=1, pady=5, padx=2, sticky="EW")
 
         # training progress label
         self.training_label_text = tk.StringVar()
@@ -49,7 +59,7 @@ class TrainFrame(SectionFrame):
             # style="Background1.TFrame",
             textvariable=self.training_label_text
         )
-        training_label.grid(row=1, column=0)
+        training_label.grid(row=1, column=0, columnspan=2)
 
         # 2. options:
         self.option_widget_list = []
@@ -169,27 +179,24 @@ class TrainFrame(SectionFrame):
             for class_label, sample_array in enumerate(sample_arrays):
                 for i in range(sample_array.shape[0]):
                     train_labels.append(class_label)
-            print(f"train_labels as a normal list: {train_labels}")
 
             train_labels = np.array(train_labels)[:, np.newaxis]
-            print(f"converting to np array: {train_labels}")
 
             # create the classes_names list:
             classes_names = [training_class.get_class_name() for training_class in classes_list]
 
-            # build & trained classifier:
+            # build & train classifier:
 
-            # instantiate the model:
-
+            # get selected options
             selected_options = [widget.get_selection() for widget in self.option_widget_list]
+            # instantiate the model:
+            self.classifier = MnetModel(
+                train_data=train_data, train_labels=train_labels,
+                classes_names=classes_names,
+                epochs=int(selected_options[0]), batch_size=int(selected_options[1]), lr=float(selected_options[2])
+            )
 
-            self.classifier = MnetModel(train_data, train_labels, classes_names=classes_names,
-                                        epochs=int(selected_options[0]),
-                                        batch_size=int(selected_options[1]),
-                                        lr=float(selected_options[2])
-                                        )
-            ''''''
-            # train
+            # train the model
             self.classifier.train_model(self.training_label_text)
 
             # evaluate the trained model
@@ -202,6 +209,47 @@ class TrainFrame(SectionFrame):
 
         else:
             self.set_training_label_text("need at least 2 enabled classes!")
+
+    def upload_model(self, test_frame: TestFrame):
+        # open file explorer:
+        file_path = filedialog.askopenfilename(
+            initialdir=os.getcwd(),
+            title="Select Image file",
+            filetypes=(("OMR file - customized zipfile", "*.omr"),)
+        )
+
+        if file_path != "":  # check that a file was selected
+
+            with ZipFile(file_path, 'r') as ziped_model:
+                # getting zipped files names
+                ziped_files = ziped_model.namelist()
+                print(ziped_files)
+
+                # reading from classes names without unzipping it :
+                classes_names = ziped_model.read(ziped_files[0]).decode().split("\n")
+                print(classes_names)
+
+                # unzipping the h5 file:
+                ziped_model.extract(ziped_files[1])
+
+                ''''''
+                # calling mnet with the h5 file:
+
+                # get selected options
+                selected_options = [widget.get_selection() for widget in self.option_widget_list]
+
+                # load the model:
+                self.classifier = MnetModel(
+                    model_path=ziped_files[1],
+                    classes_names=classes_names,
+                    epochs=int(selected_options[0]), batch_size=int(selected_options[1]), lr=float(selected_options[2])
+                )
+
+                # activate testing section:
+                test_frame.start_testing(self.classifier)
+
+                # remove the extracted h5 file
+                os.remove(ziped_files[1])
 
 
 # a frame containing a label and an option widget:

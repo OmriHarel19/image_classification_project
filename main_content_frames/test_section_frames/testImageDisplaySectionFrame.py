@@ -110,7 +110,7 @@ class TestImageDisplaySectionFrame(ttk.Frame):
             child.destroy()
 
         # open file explorer:
-        file_path = tk.filedialog.askopenfilename(  # returns a tuple of selected file paths
+        file_path = filedialog.askopenfilename(  # returns a tuple of selected file paths
             initialdir=os.getcwd(),
             title="Select Image file",
             filetypes=(("JPG File", "*.jpg"), ("JPEG File", "*.jpeg"), ("PNG File", "*.png"))

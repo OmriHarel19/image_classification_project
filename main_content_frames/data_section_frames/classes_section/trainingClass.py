@@ -61,7 +61,7 @@ class TrainingClass:
     def upload_images(self):
         # open file explorer:
 
-        file_paths = tk.filedialog.askopenfilenames(  # returns a tuple of selected file paths
+        file_paths = filedialog.askopenfilenames(  # returns a tuple of selected file paths
             initialdir=os.getcwd(),
             title="Select Image file",
             filetypes=(("JPG File", "*.jpg"), ("JPEG File", "*.jpeg"), ("PNG File", "*.png"))

@@ -3,10 +3,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 import tensorflow as tf
 import tkinter as tk
+import os
+from zipfile import ZipFile
 
 from typing import List
 
 # imports for model:
+from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D, BatchNormalization, Dropout
 from tensorflow.keras.models import Sequential
@@ -17,10 +20,13 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 
 
 class MnetModel:
-    def __init__(self, train_data: np.array, train_labels: np.array, classes_names: List[str], epochs: int,
-                 batch_size: int, lr: float):
-        # properties:
-        self.data, self.labels = shuffle(train_data, train_labels)
+    def __init__(self, classes_names: List[str], model_path: str = None,
+                 train_data: np.array = None, train_labels: np.array = None,
+                 epochs: int = 1, batch_size: int = 16, lr: float = 0.001):
+
+        # initialize properties:
+        self.data, self.labels = None, None
+        self.x_train, self.x_test, self.y_train, self.y_test = None, None, None, None
         self.model = None
 
         self.classes_names = classes_names
@@ -30,21 +36,29 @@ class MnetModel:
         self.batch_size = batch_size
         self.lr = lr
 
-        # 1. pre-process
-        for i in range(self.data.shape[0]):
-            self.data[i] = preprocess_input(self.data[i])
+        self.save_model_path = "trained_model/"
 
-        # 2. split to train & test sets (also shuffles the data set)
-        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.data, self.labels, test_size=0.3,
-                                                                                shuffle=True)
-        print("data sets after split")
-        print(f"x_train shape: {self.x_train.shape}")
-        print(f"y_train shape: {self.y_train.shape}")
-        print(f"x_test shape: {self.x_test.shape}")
-        print(f"y_test shape: {self.y_test.shape}")
+        # option 1: load a saved model from h5 file:
+        if model_path is not None:
+            self.model = load_model(model_path)
 
-        # 3. create model
-        self.create_model()
+        # option 2: get data set and create model
+        elif train_data is not None and train_labels is not None:
+
+            self.data, self.labels = shuffle(train_data, train_labels)
+
+            # 1. pre-process
+            for i in range(self.data.shape[0]):
+                self.data[i] = preprocess_input(self.data[i])
+
+            # 2. split to train & test sets (also shuffles the data set)
+            self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.data, self.labels, test_size=0.3, shuffle=True)
+
+            # 3. create model
+            self.create_model()
+
+        else:
+            raise ValueError("did not specify model_path to load OR a full data set (data & labels) for a new model!")
 
     # setters & getters:
     def get_number_of_classes(self):
@@ -110,12 +124,14 @@ class MnetModel:
 
         self.model = complete_model
 
-    # creating a callback for saving model whenever validation acc improves
+    # creating a callback for saving model whenever acc improves
+    # ** tracking acc and val acc because val acc maximizes almost instantly (because it is a small set)
     def get_checkpoint_best_only(self, path):
         checkpoint = ModelCheckpoint(filepath=path, save_weights_only=False, save_best_only=True, save_freq='epoch',
-                                     monitor='val_accuracy', verbose=1)
+                                     monitor='accuracy', verbose=1)
         return checkpoint
 
+    '''
     def train_model(self, training_progress_var: tk.StringVar):
         # training progress callback:
         training_progress = TrainingProgressCallback(training_progress_var, self.epochs)
@@ -131,20 +147,29 @@ class MnetModel:
             validation_data=(self.x_test, self.y_test),
             callbacks=[training_progress, checkpoint]
         )
+        '''
 
-    '''
-    def train_model(self):
+    def train_model(self, training_progress_var: tk.StringVar):
         steps_per_epoch = len(self.x_train) // self.batch_size
         validation_steps = len(self.x_test) // self.batch_size
+
+        # training progress callback:
+        training_progress = TrainingProgressCallback(training_progress_var, self.epochs)
+        # saving model callback:
+        file_name = "keras_model.h5"
+        path = os.path.join(self.save_model_path, file_name)
+        checkpoint = self.get_checkpoint_best_only(path)
+        # create a zipped model callback:
+        zip_model = ZipModelCallback(self.save_model_path, self.classes_names)
 
         _ = self.model.fit_generator(
             self.data_generator("train"),
             validation_data=self.data_generator("test"),
             steps_per_epoch=steps_per_epoch,
             validation_steps=validation_steps,
-            epochs=self.epochs
+            epochs=self.epochs,
+            callbacks=[training_progress, checkpoint, zip_model]
         )
-    '''
 
     #       --training methods--
 
@@ -211,3 +236,33 @@ class TrainingProgressCallback(Callback):
 
     def on_train_end(self, logs=None):
         self.training_progress_var.set("finnished training!")
+
+
+class ZipModelCallback(Callback):
+
+    def __init__(self, saved_model_path: str, classes_names: List[str]):
+        self.saved_model_path = saved_model_path
+        self.classes_names = classes_names
+
+    def on_train_end(self, logs=None):
+        # create classes_names file:
+
+        # create file path
+        classes_file_name = "classes_names.txt"
+        classes_file_path = os.path.join(self.saved_model_path, classes_file_name)
+        # open, write, and close file
+        with open(classes_file_path, 'w') as classes_file:
+            classes_file.write("\n".join(self.classes_names))
+
+        # create custom zipfile:
+
+        # create file path
+        zip_name = "trained_model.omr"
+        zip_path = os.path.join(self.saved_model_path, zip_name)
+        # save file names to zip
+        files_to_zip = [os.path.join(self.saved_model_path, file_name) for file_name in os.listdir(self.saved_model_path)]
+        # create zip file
+        with ZipFile(zip_path, 'w') as ziped_model:
+            for file in files_to_zip:
+                ziped_model.write(file)  # add the file to the zip
+                os.remove(file)  # remove from dir
