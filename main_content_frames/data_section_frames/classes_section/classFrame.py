@@ -54,8 +54,7 @@ class ClassFrame(ttk.Frame):
         )
         self.class_state_label.grid(row=2, column=1, padx=2, pady=2)
 
-        self.sample_counter = 0
-        self.sample_counter_label_text = tk.StringVar(value=f"{self.sample_counter} image samples")
+        self.sample_counter_label_text = tk.StringVar(value=f"0 image samples")
 
         self.sample_counter_label = ttk.Label(
             self,

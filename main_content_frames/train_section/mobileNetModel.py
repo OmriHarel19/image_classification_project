@@ -16,7 +16,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras import regularizers
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import Callback
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 
 
 class MnetModel:
@@ -131,27 +131,17 @@ class MnetModel:
                                      monitor='accuracy', verbose=1)
         return checkpoint
 
-    '''
-    def train_model(self, training_progress_var: tk.StringVar):
-        # training progress callback:
-        training_progress = TrainingProgressCallback(training_progress_var, self.epochs)
-        # saving model callback:
-        path = "trained_model/keras_model.h5"
-        checkpoint = self.get_checkpoint_best_only(path)
-
-        _ = self.model.fit(
-            x=self.x_train,
-            y=self.y_train,
-            batch_size=self.batch_size,
-            epochs=self.epochs,
-            validation_data=(self.x_test, self.y_test),
-            callbacks=[training_progress, checkpoint]
-        )
-        '''
+    # creating an EarlyStopping callback
+    def get_earlystop(self):
+        # monitoring the validation set accuracy
+        early_stop = EarlyStopping(monitor='accuracy', patience=0, mode='max')
+        return early_stop
 
     def train_model(self, training_progress_var: tk.StringVar):
         steps_per_epoch = len(self.x_train) // self.batch_size
         validation_steps = len(self.x_test) // self.batch_size
+
+        # callbacks:
 
         # training progress callback:
         training_progress = TrainingProgressCallback(training_progress_var, self.epochs)
@@ -161,14 +151,16 @@ class MnetModel:
         checkpoint = self.get_checkpoint_best_only(path)
         # create a zipped model callback:
         zip_model = ZipModelCallback(self.save_model_path, self.classes_names)
+        # create an early stopping callback
+        early_stop = self.get_earlystop()
 
-        _ = self.model.fit_generator(
+        _ = self.model.fit(
             self.data_generator("train"),
             validation_data=self.data_generator("test"),
             steps_per_epoch=steps_per_epoch,
             validation_steps=validation_steps,
             epochs=self.epochs,
-            callbacks=[training_progress, checkpoint, zip_model]
+            callbacks=[training_progress, checkpoint, zip_model, early_stop]
         )
 
     #       --training methods--

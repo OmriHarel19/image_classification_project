@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from main_content_frames import DataFrame, TrainFrame, TestFrame
+from main_content_frames import SectionFrame, DataFrame, TrainFrame, TestFrame
 
 COLOUR_PRIMARY = "#2e3f4f"
 COLOUR_SECONDARY = "#293846"
@@ -38,45 +38,11 @@ class AppWindow(tk.Tk):
         #       --frames--
 
         # main container:
-        # in: root (0,0) - contains all other frames
-        # contains: (0,0) - AppTitle, (1,0) - ClassifierContainer
+        main_container = SectionFrame(self, "Omri's Image Classifier")
+        main_container.pack(side="top", fill="both", expand=True)
 
-        container = ttk.Frame(self, style="Background1.TFrame")
-        # pack the container (not grid because it is the only element in root)
-        container.pack(side="top", fill="both", expand=True)
-        # configure row & col
-        container.columnconfigure(0, weight=1)  # expanding col 0
-        container.rowconfigure(1, weight=1)  # expanding 1st row: will contain the classifier
-
-        # title frame
-        self.title_frame = AppTitle(container)
         # Classifier Container:
-        self.classifier_frame = ClassifierContainer(container)
-
-
-class AppTitle(ttk.Frame):
-
-    # The application title frame,
-    # contains: title label at (0,0)
-    # placed in: grid (0,0) in the application window
-
-    def __init__(self, container, **kwargs):
-        super().__init__(container, **kwargs)
-
-        # place in AppWindow : container frame
-        self.grid(row=0, column=0, padx=5, pady=10, sticky="EW")
-        # expand 1st col to centralize the title label
-        self.columnconfigure(0, weight=1)
-
-        self["style"] = "Background2.TFrame"
-
-        self.app_title_label = ttk.Label(
-            self,
-            text="Image Classifier",
-            font=("TkDefaultFont", 20)
-        )
-
-        self.app_title_label.grid(row=0, column=0)
+        self.classifier_frame = ClassifierContainer(main_container)
 
 
 class ClassifierContainer(ttk.Frame):

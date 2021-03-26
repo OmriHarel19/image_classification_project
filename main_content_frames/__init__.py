@@ -1,4 +1,5 @@
 from main_content_frames.dataFrame import DataFrame
 from main_content_frames.trainFrame import TrainFrame
 from main_content_frames.testFrame import TestFrame
+from main_content_frames.sectionFrame import SectionFrame
 from main_content_frames.data_section_frames.classes_section.classFrame import ClassFrame

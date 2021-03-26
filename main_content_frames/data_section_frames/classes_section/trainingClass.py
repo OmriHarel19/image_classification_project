@@ -33,6 +33,8 @@ class TrainingClass:
 
         #       --properties--
         self.img_width, self.img_height = (128, 128)
+        self.minimal_dataset_size = 128
+        self.sample_counter = 0
         self.samples = np.empty(
             shape=(0, self.img_width, self.img_height, 3))  # 4 dim array containing class image samples
         self.enabled = True  # boolean state of the class
@@ -51,8 +53,17 @@ class TrainingClass:
     def get_class_name(self):
         return self.class_frame.class_name.get()
 
+    def get_minimal_dataset_size(self):
+        return self.minimal_dataset_size
+
     def is_enabled(self):
         return self.enabled
+
+    def is_dataset_empty(self):
+        return self.samples.shape[0] == 0
+
+    def is_minimal_dataset_size(self):
+        return self.sample_counter >= self.minimal_dataset_size
 
     # ----------------------------------------------
 
@@ -91,9 +102,9 @@ class TrainingClass:
             # array after addition:
             print(f"self.samples shape: {self.samples.shape}")
 
-            # update sample counter label:
-            self.class_frame.sample_counter += current_samples.shape[0]
-            self.class_frame.sample_counter_label_text.set(f"{self.class_frame.sample_counter} image samples")
+            # update sample counter & sample counter label label:
+            self.sample_counter += current_samples.shape[0]
+            self.class_frame.sample_counter_label_text.set(f"{self.sample_counter} image samples")
 
     # triggered when the webcam button of a specific class is pressed
     # creates a new WebcamDisplayFrame for the current class, and displays webcam footage

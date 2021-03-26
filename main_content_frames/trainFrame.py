@@ -17,7 +17,8 @@ from typing import Union, List
 
 
 class TrainFrame(SectionFrame):
-    def __init__(self, container: ttk.Frame, frame_title: str, classes_window: ClassesWindow, test_frame: TestFrame, **kwargs):
+    def __init__(self, container: ttk.Frame, frame_title: str, classes_window: ClassesWindow, test_frame: TestFrame,
+                 **kwargs):
         super().__init__(container, frame_title, **kwargs)
 
         self.classifier = None
@@ -33,29 +34,29 @@ class TrainFrame(SectionFrame):
         # 1. training button:
 
         # container:
-        train_button_container = ttk.Frame(widgets_container, style="Background1.TFrame")
-        train_button_container.columnconfigure((0, 1), weight=1)
-        train_button_container.grid(row=0, column=0, padx=5, pady=10)
+        buttons_container = ttk.Frame(widgets_container, style="Background1.TFrame")
+        buttons_container.columnconfigure((0, 1), weight=1)
+        buttons_container.grid(row=0, column=0, padx=5, pady=10)
 
         # button:
-        train_button = ttk.Button(
-            train_button_container,
+        self.train_button = ttk.Button(
+            buttons_container,
             text="Train model:",
             command=lambda: self.run_training_thread(classes_list=classes_window.classes_list, test_frame=test_frame)
         )
-        train_button.grid(row=0, column=0, pady=5, padx=2, sticky="EW")
+        self.train_button.grid(row=0, column=0, pady=5, padx=2, sticky="EW")
 
-        upload_model_button = ttk.Button(
-            train_button_container,
+        self.upload_model_button = ttk.Button(
+            buttons_container,
             text="Upload model",
             command=lambda: self.upload_model(test_frame=test_frame)
         )
-        upload_model_button.grid(row=0, column=1, pady=5, padx=2, sticky="EW")
+        self.upload_model_button.grid(row=0, column=1, pady=5, padx=2, sticky="EW")
 
         # training progress label
         self.training_label_text = tk.StringVar()
         training_label = ttk.Label(  # making it a class property because other methods need access to it
-            train_button_container,
+            buttons_container,
             # style="Background1.TFrame",
             textvariable=self.training_label_text
         )
@@ -97,7 +98,7 @@ class TrainFrame(SectionFrame):
 
         batch_size_widget = ttk.Combobox(
             batch_size_widget_frame,
-            values=tuple([2 ** i for i in range(3, 8)]),
+            values=tuple([2 ** i for i in range(3, 7)]),
             state="readonly"
         )
 
@@ -151,11 +152,21 @@ class TrainFrame(SectionFrame):
     def set_training_label_text(self, text: str):
         self.training_label_text.set(text)
 
+    # ----------------------------------------------------
+
     def reset_options(self):
         # reset all option widgets to their initial value
 
         for widget in self.option_widget_list:
             widget.reset_option()
+
+    def activate_buttons(self):
+        self.train_button["state"] = "normal"
+        self.upload_model_button["state"] = "normal"
+
+    def deactivate_buttons(self):
+        self.train_button["state"] = "disabled"
+        self.upload_model_button["state"] = "disabled"
 
     def run_training_thread(self, classes_list: List[TrainingClass], test_frame: TestFrame):
         training_thread = threading.Thread(target=self.train_model, args=[classes_list, test_frame])
@@ -163,52 +174,62 @@ class TrainFrame(SectionFrame):
 
     # triggered by the train model button, runs in a thread to keep gui functional while training
     def train_model(self, classes_list: List[TrainingClass], test_frame: TestFrame):
-        # 1. at least two enabled training classes - done
-        # 2. each class contains at least x samples (x to be decided) - not done
+        self.deactivate_buttons()
 
         # get all enabled classes
         enabled_classes = [training_class for training_class in classes_list if training_class.is_enabled()]
 
-        if len(enabled_classes) >= 2:
-            # create train_data np array
-            sample_arrays = [training_class.samples for training_class in classes_list]
-            train_data = np.concatenate(sample_arrays, axis=0)
+        # training conditions:
 
-            # create train_labels np array:
-            train_labels = []
-            for class_label, sample_array in enumerate(sample_arrays):
-                for i in range(sample_array.shape[0]):
-                    train_labels.append(class_label)
-
-            train_labels = np.array(train_labels)[:, np.newaxis]
-
-            # create the classes_names list:
-            classes_names = [training_class.get_class_name() for training_class in classes_list]
-
-            # build & train classifier:
-
-            # get selected options
-            selected_options = [widget.get_selection() for widget in self.option_widget_list]
-            # instantiate the model:
-            self.classifier = MnetModel(
-                train_data=train_data, train_labels=train_labels,
-                classes_names=classes_names,
-                epochs=int(selected_options[0]), batch_size=int(selected_options[1]), lr=float(selected_options[2])
-            )
-
-            # train the model
-            self.classifier.train_model(self.training_label_text)
-
-            # evaluate the trained model
-            test_loss, test_accuracy = self.classifier.evaluate_model()
-            print(f"Test loss: {test_loss}")
-            print(f"Test accuracy: {test_accuracy}")
-
-            # activate testing section:
-            test_frame.start_testing(self.classifier)
-
-        else:
+        # 1. at least 2 training classes
+        if len(enabled_classes) < 2:
             self.set_training_label_text("need at least 2 enabled classes!")
+            return
+        # 2. each class contains data
+        for enabled_class in enabled_classes:
+            if not enabled_class.is_minimal_dataset_size():
+                self.set_training_label_text(
+                    f"all classes must have at least {enabled_class.get_minimal_dataset_size()} samples!")
+                return
+
+        # create train_data np array
+        sample_arrays = [training_class.samples for training_class in classes_list]
+        train_data = np.concatenate(sample_arrays, axis=0)
+
+        # create train_labels np array:
+        train_labels = []
+        for class_label, sample_array in enumerate(sample_arrays):
+            for i in range(sample_array.shape[0]):
+                train_labels.append(class_label)
+
+        train_labels = np.array(train_labels)[:, np.newaxis]
+
+        # create the classes_names list:
+        classes_names = [training_class.get_class_name() for training_class in classes_list]
+
+        # build & train classifier:
+
+        # get selected options
+        selected_options = [widget.get_selection() for widget in self.option_widget_list]
+        # instantiate the model:
+        self.classifier = MnetModel(
+            train_data=train_data, train_labels=train_labels,
+            classes_names=classes_names,
+            epochs=int(selected_options[0]), batch_size=int(selected_options[1]), lr=float(selected_options[2])
+        )
+
+        # train the model
+        self.classifier.train_model(self.training_label_text)
+
+        # evaluate the trained model
+        test_loss, test_accuracy = self.classifier.evaluate_model()
+        print(f"Test loss: {test_loss}")
+        print(f"Test accuracy: {test_accuracy}")
+
+        # activate testing section:
+        test_frame.start_testing(self.classifier)
+
+        self.activate_buttons()
 
     def upload_model(self, test_frame: TestFrame):
         # open file explorer:
@@ -223,16 +244,13 @@ class TrainFrame(SectionFrame):
             with ZipFile(file_path, 'r') as ziped_model:
                 # getting zipped files names
                 ziped_files = ziped_model.namelist()
-                print(ziped_files)
 
                 # reading from classes names without unzipping it :
                 classes_names = ziped_model.read(ziped_files[0]).decode().split("\n")
-                print(classes_names)
 
                 # unzipping the h5 file:
                 ziped_model.extract(ziped_files[1])
 
-                ''''''
                 # calling mnet with the h5 file:
 
                 # get selected options
